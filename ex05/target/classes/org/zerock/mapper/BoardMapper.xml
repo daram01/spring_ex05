@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace의 값은 mapper인터페이스가 속한 패키지와 클래스명을 작성 이 인터페이스와 연결하여 사용할 거라는 선언이다. -->
+<mapper namespace="org.zerock.mapper.BoardMapper">
+
+
+<!-- id의 속성값은 mapper 인터페이스 추상메서드의 이름 -->
+<!-- resultType : 결과를 담을 수 있는 타입 -> BoardVO에 배열 형태(LIST)로 저장하고 데이터를 돌려준다. -->
+<select id="getList" resultType="org.zerock.domain.BoardVO">
+	<![CDATA[
+	select * from tbl_board where bno > 0
+	]]>
+</select>
+
+
+<!-- 게시물 전체 목록 + 페이징 처리 + 검색  -->
+<select id="getListWithPaging" resultType="org.zerock.domain.BoardVO">
+	<![CDATA[
+	select
+		bno, title, content, writer, regdate, updatedate, replycnt from
+			(
+				select /*+INDEX_DESC(tbl_board pk_board) */
+				rownum rn, bno, title, content, writer, regdate, updatedate, replycnt
+				from tbl_board 
+				where
+	]]>
+
+	<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+		<foreach item='type' collection="typeArr">
+			<trim prefix="OR">
+				<choose>
+					<when test="type == 'T'.toString()">
+						title like '%'||#{keyword}||'%'
+					</when>
+					<when test="type == 'C'.toString()">
+						content like '%'||#{keyword}||'%'
+					</when>
+					<when test="type == 'W'.toString()">
+						writer like '%'||#{keyword}||'%'
+					</when>
+				</choose>
+			</trim>
+		</foreach>
+	</trim>
+				
+	<![CDATA[				
+				rownum <= #{pageNum} * #{amount}
+			)
+		where rn > (#{pageNum}-1) * #{amount}
+	]]>
+</select>
+
+
+<!-- parameterType="org.zerock.domain.BoardVO" 가 생략된 것임 -->
+<insert id="insert">
+	insert into tbl_board (bno, title, content, writer)
+	values (seq_board.nextval, #{title}, #{content}, #{writer})
+</insert>
+
+<insert id="insertSelectKey">
+	<selectKey keyProperty="bno" order="BEFORE" resultType="long">
+		select seq_board.nextval from dual
+	</selectKey>
+	
+	insert into tbl_board (bno, title, content, writer)
+	values (#{bno}, #{title}, #{content}, #{writer})
+</insert>
+
+<select id="read" resultType="org.zerock.domain.BoardVO">
+	select * from tbl_board where bno = #{bno}
+</select>
+
+<delete id="delete">
+	delete from tbl_board where bno = #{bno}
+</delete>
+
+<update id="update">
+	update tbl_board
+	set title = #{title},
+	content = #{content},
+	writer = #{writer},
+	updateDate = sysdate
+	where bno = #{bno} <!-- 파라미터로 넘어온 숫자를 업데이트 함 -->
+</update>
+
+
+<select id="getTotalCount" resultType="int">
+	<![CDATA[
+	select count(*) from tbl_board where 
+	]]>
+	<trim prefix="(" suffix=") AND " prefixOverrides="OR">
+		<foreach item='type' collection="typeArr">
+			<trim prefix="OR">
+				<choose>
+					<when test="type == 'T'.toString()">
+						title like '%'||#{keyword}||'%'
+					</when>
+					<when test="type == 'C'.toString()">
+						content like '%'||#{keyword}||'%'
+					</when>
+					<when test="type == 'W'.toString()">
+						writer like '%'||#{keyword}||'%'
+					</when>
+				</choose>
+			</trim>
+		</foreach>
+	</trim>	
+	<![CDATA[
+	bno > 0
+	]]>
+</select>
+
+<update id="updateReplyCnt">
+	update tbl_board set replycnt = replycnt + #{amount} where bno = #{bno}
+</update>
+
+</mapper>
