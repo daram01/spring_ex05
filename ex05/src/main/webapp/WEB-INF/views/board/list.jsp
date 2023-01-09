@@ -139,7 +139,7 @@
 </div>
 </div>
 <!-- /.row -->
-            
+
 <script>
 	$(function(){
 		var result = '<c:out value="${result}"/>';
