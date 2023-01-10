@@ -2,6 +2,7 @@ package org.zerock.service;
 
 import java.util.List;
 
+import org.zerock.domain.BoardAttachVO;
 import org.zerock.domain.BoardVO;
 import org.zerock.domain.Criteria;
 
@@ -20,4 +21,7 @@ public interface BoardService {
 	
 	// 전체 데이터 갯수 가져오기
 	public int getTotal(Criteria cri);
+	
+	// findByBno mapping 작업 - 첨부파일을 화면에 뿌려주는 것
+	public List<BoardAttachVO> getAttachList(Long bno);
 }
